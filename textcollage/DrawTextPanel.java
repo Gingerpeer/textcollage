@@ -14,6 +14,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -206,7 +207,56 @@ public class DrawTextPanel extends JPanel  {
 	 */
 	private void doMenuCommand(String command) {
 		if (command.equals("Save...")) { // save all the string info to a file
-			JOptionPane.showMessageDialog(this, "Sorry, the Save command is not implemented.");
+			File textFile = fileChooser.getOutputFile(this, "Select Image File Name", "textimage.txt");
+			if (textFile == null){
+				return;
+			}
+			try {
+				PrintWriter out = new PrintWriter(textFile);
+				Color bgColor = canvas.getBackground();
+				out.println(bgColor.getRed());
+				out.println(bgColor.getGreen());
+				out.println(bgColor.getBlue());
+				ArrayList<DrawTextItem> items = theString;
+				int numItems = items.size();
+				out.println(numItems);
+				for(DrawTextItem item : items) {
+					out.println(item.getString());
+					Font font = item.getFont();
+					if(font == null){
+						out.println("");
+						out.println(Font.PLAIN);
+						out.println(12);
+					}else{
+						out.println(font.getName());
+						out.println(font.getStyle());
+						out.println(font.getSize());
+					}
+					out.println(item.getX());
+					out.println(item.getY());
+					Color textColor = item.getTextColor();
+					out.println(textColor.getRed());
+					out.println(textColor.getGreen());
+					out.println(textColor.getBlue());
+					Color backgroundColor = item.getBackground();
+					if(backgroundColor == null){
+						out.println("");
+				}else{
+						out.println(backgroundColor.getRed());
+						out.println(backgroundColor.getGreen());
+						out.println(backgroundColor.getBlue());
+					}
+					out.println(item.getBorder());
+					out.println(item.getRotationAngle());
+					out.println(item.getMagnification());
+					out.println(item.getBackgroundTransparency());
+					out.println(item.getTextTransparency());
+					out.close();
+				}
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(this, 
+						"Sorry, an error occurred while trying to save the text file:\n" + e);
+			}
 		}
 		else if (command.equals("Open...")) { // read a previously saved file, and reconstruct the list of strings
 			JOptionPane.showMessageDialog(this, "Sorry, the Open command is not implemented.");
