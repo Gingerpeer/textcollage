@@ -251,8 +251,8 @@ public class DrawTextPanel extends JPanel  {
 					out.println(item.getMagnification());
 					out.println(item.getBackgroundTransparency());
 					out.println(item.getTextTransparency());
-					out.close();
 				}
+				out.close();
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(this, 
 						"Sorry, an error occurred while trying to save the text file:\n" + e);
