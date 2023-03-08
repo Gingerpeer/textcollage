@@ -1,5 +1,9 @@
 package textcollage;
 
+import org.json.JSONObject;
+import org.json.JSONArray;
+import java.nio.file.Files;
+
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -16,6 +20,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+// import java.util.Scanner;
+
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JColorChooser;
@@ -27,6 +33,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+
+
 
 /**
  * A panel that contains a large drawing area where strings
@@ -206,62 +214,117 @@ public class DrawTextPanel extends JPanel  {
 	 * @param command the text of the menu command.
 	 */
 	private void doMenuCommand(String command) {
-		if (command.equals("Save...")) { // save all the string info to a file
-			File textFile = fileChooser.getOutputFile(this, "Select Image File Name", "textimage.txt");
-			if (textFile == null){
-				return;
+		if (command.equals("Save...")) {
+			File textFile = fileChooser.getOutputFile(this, "Select Image File Name", "textcollage.json");
+			if (textFile == null) {
+					return;
 			}
 			try {
-				PrintWriter out = new PrintWriter(textFile);
-				Color bgColor = canvas.getBackground();
-				out.println(bgColor.getRed());
-				out.println(bgColor.getGreen());
-				out.println(bgColor.getBlue());
-				ArrayList<DrawTextItem> items = theString;
-				int numItems = items.size();
-				out.println(numItems);
-				for(DrawTextItem item : items) {
-					out.println(item.getString());
-					Font font = item.getFont();
-					if(font == null){
-						out.println("");
-						out.println(Font.PLAIN);
-						out.println(12);
-					}else{
-						out.println(font.getName());
-						out.println(font.getStyle());
-						out.println(font.getSize());
+					PrintWriter out = new PrintWriter(textFile);
+					Color bgColor = canvas.getBackground();
+					JSONObject json = new JSONObject();
+					json.put("bgRed", bgColor.getRed());
+					json.put("bgGreen", bgColor.getGreen());
+					json.put("bgBlue", bgColor.getBlue());
+					JSONArray items = new JSONArray();
+					for (DrawTextItem item : theString) {
+							JSONObject itemJson = new JSONObject();
+							itemJson.put("text", item.getString());
+							Font font = item.getFont();
+							if (font == null) {
+									itemJson.put("fontName", "");
+									itemJson.put("fontStyle", Font.PLAIN);
+									itemJson.put("fontSize", 12);
+							} else {
+									itemJson.put("fontName", font.getName());
+									itemJson.put("fontStyle", font.getStyle());
+									itemJson.put("fontSize", font.getSize());
+							}
+							itemJson.put("x", item.getX());
+							itemJson.put("y", item.getY());
+							Color textColor = item.getTextColor();
+							itemJson.put("textRed", textColor.getRed());
+							itemJson.put("textGreen", textColor.getGreen());
+							itemJson.put("textBlue", textColor.getBlue());
+							itemJson.put("border", item.getBorder());
+							itemJson.put("rotationAngle", item.getRotationAngle());
+							itemJson.put("magnification", item.getMagnification());
+							itemJson.put("backgroundTransparency", item.getBackgroundTransparency());
+							itemJson.put("textTransparency", item.getTextTransparency());
+							items.put(itemJson);
 					}
-					out.println(item.getX());
-					out.println(item.getY());
-					Color textColor = item.getTextColor();
-					out.println(textColor.getRed());
-					out.println(textColor.getGreen());
-					out.println(textColor.getBlue());
-					Color backgroundColor = item.getBackground();
-					if(backgroundColor == null){
-						out.println("");
-				}else{
-						out.println(backgroundColor.getRed());
-						out.println(backgroundColor.getGreen());
-						out.println(backgroundColor.getBlue());
-					}
-					out.println(item.getBorder());
-					out.println(item.getRotationAngle());
-					out.println(item.getMagnification());
-					out.println(item.getBackgroundTransparency());
-					out.println(item.getTextTransparency());
-				}
-				out.close();
+					json.put("items", items);
+					out.print(json.toString(4)); // use 4 spaces for indentation
+					out.close();
 			} catch (Exception e) {
-				JOptionPane.showMessageDialog(this, 
-						"Sorry, an error occurred while trying to save the text file:\n" + e);
+					JOptionPane.showMessageDialog(this, "Sorry, an error occurred while trying to save the text file:\n" + e);
 			}
-		}
-		else if (command.equals("Open...")) { // read a previously saved file, and reconstruct the list of strings
-			JOptionPane.showMessageDialog(this, "Sorry, the Open command is not implemented.");
-			canvas.repaint(); // (you'll need this to make the new list of strings take effect)
-		}
+	}	
+	else if (command.equals("Open...")) {
+    File textFile = fileChooser.getInputFile();
+    ArrayList<DrawTextItem> items = new ArrayList<DrawTextItem>();
+    if (textFile == null) {
+        JOptionPane.showMessageDialog(this, "Sorry, the file selected is not valid");
+        return;
+    }
+    if (textFile.getName().equals("textcollage.json")) {
+        try {
+					// I used the following code to read the JSON file instead of Scanner for text file
+					// The reason being, is I find working with JSON files easier than text files
+            String json = new String(Files.readAllBytes(textFile.toPath()));
+            JSONObject obj = new JSONObject(json);
+						
+            int bgRed = obj.getInt("bgRed");
+            int bgGreen = obj.getInt("bgGreen");
+            int bgBlue = obj.getInt("bgBlue");
+            Color bgColor = new Color(bgRed, bgGreen, bgBlue);
+            JSONArray arr = obj.getJSONArray("items");
+            for (int i = 0; i < arr.length(); i++) {
+								JSONObject itemJson = arr.getJSONObject(i);
+								String text = itemJson.getString("text");
+								int x = itemJson.getInt("x");
+                int y = itemJson.getInt("y");
+								DrawTextItem item = new DrawTextItem(text,x,y);
+								item.setBackground(bgColor);
+                String fontName = itemJson.getString("fontName");
+                int fontStyle = itemJson.getInt("fontStyle");
+                int fontSize = itemJson.getInt("fontSize");
+                Font font = new Font(fontName, fontStyle, fontSize);
+								// check if font is null
+								if (font != null) {
+									item.setFont(font);
+								}
+                int textRed = itemJson.getInt("textRed");
+                int textGreen = itemJson.getInt("textGreen");
+                int textBlue = itemJson.getInt("textBlue");
+                Color textColor = new Color(textRed, textGreen, textBlue);
+                boolean border = itemJson.getBoolean("border");
+                double rotationAngle = itemJson.getDouble("rotationAngle");
+                double magnification = itemJson.getDouble("magnification");
+                int backgroundTransparency = itemJson.getInt("backgroundTransparency");
+								item.setBackgroundTransparency(backgroundTransparency);
+                int textTransparency = itemJson.getInt("textTransparency");
+								item.setTextTransparency(textTransparency);
+								item.setTextColor(textColor);
+								item.setBorder(border);
+								item.setRotationAngle(rotationAngle);
+								item.setMagnification(magnification);
+								item.setX(x);
+								item.setY(y);
+                theString.add(item);
+            }
+						canvas.setBackground(bgColor);
+					
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Sorry, an error occurred while trying to open the text file:\n" + e);
+            return;
+        }
+        canvas.repaint();
+    } else {
+        JOptionPane.showMessageDialog(this, "The file selected is not valid");
+        return;
+    }	
+	}
 		else if (command.equals("Clear")) {  // remove all strings
 			theString.clear();   // Remove the ONLY string from the canvas.
 			undoMenuItem.setEnabled(false);
