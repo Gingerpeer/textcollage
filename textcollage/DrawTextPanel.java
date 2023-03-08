@@ -262,7 +262,6 @@ public class DrawTextPanel extends JPanel  {
 	}	
 	else if (command.equals("Open...")) {
     File textFile = fileChooser.getInputFile();
-    ArrayList<DrawTextItem> items = new ArrayList<DrawTextItem>();
     if (textFile == null) {
         JOptionPane.showMessageDialog(this, "Sorry, the file selected is not valid");
         return;
