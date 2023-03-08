@@ -33,6 +33,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.JButton;
+
 
 
 
@@ -113,17 +115,37 @@ public class DrawTextPanel extends JPanel  {
 		setBackground(Color.BLACK);
 		setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
 		canvas = new Canvas();
+		canvas.add(new JLabel("Click on the canvas to add text. ") {{
+			setFont(getFont().deriveFont(Font.BOLD, 16)); // set the font to bold and 16 points
+		}});
 		add(canvas, BorderLayout.CENTER);
 		JPanel bottom = new JPanel();
 		bottom.add(new JLabel("Text to add: "));
 		input = new JTextField("Hello World!", 40);
 		bottom.add(input);
 		add(bottom, BorderLayout.SOUTH);
-		canvas.addMouseListener( new MouseAdapter() {
-			public void mousePressed(MouseEvent e) {
-				doMousePress( e );
-			}
-		} );
+		JPanel side = new JPanel();
+    // Add a color picker for the background color
+		side.add(new JLabel("Choose Background Color: "));
+    JButton bgColorButton = new JButton("Background Color");
+    bgColorButton.addActionListener(new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            Color selectedColor = JColorChooser.showDialog(
+                DrawTextPanel.this,
+                "Choose Background Color",
+                canvas.getBackground());
+            if (selectedColor != null) {
+                canvas.setBackground(selectedColor);
+            }
+        }
+    });
+    side.add(bgColorButton);
+    add(side, BorderLayout.NORTH);
+    canvas.addMouseListener( new MouseAdapter() {
+        public void mousePressed(MouseEvent e) {
+            doMousePress( e );
+        }
+    } );
 	}
 		
 	/**
